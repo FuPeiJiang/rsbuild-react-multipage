@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useEffect } from "react";
 import Navbar from "./Navbar";
 import { add_base, remove_base } from "./util/url-path";
 import View1 from "./View1";
@@ -11,19 +11,29 @@ import View3SubView3 from "./View3SubView3";
 
 import logo_rsbuild from './static/rsbuild-logo.svg';
 import logo_react from './static/react.svg';
+import { useSavedPathnameStore } from "./util/store";
 
 export default function Router() {
 
-    const [pathname, set_pathname] = useState(remove_base(window.location.pathname))
+    const { saved_pathname, set_saved_pathname, saved_pathname_view3, set_saved_pathname_view3 } = useSavedPathnameStore()
 
-    useLayoutEffect(() => { // only happens after a successful render, not redirected
-        localStorage.setItem("saved_pathname", pathname);
-        (pathname.startsWith("/view3") && localStorage.setItem("saved_pathname_view3", pathname))
-    });
+    const pathname = remove_base(window.location.pathname)
+
+    function set_pathname(pathname: string) {
+        if (pathname !== saved_pathname) {
+            set_saved_pathname(pathname)
+            if (pathname.startsWith("/view3")) {
+                set_saved_pathname_view3(pathname)
+            }
+        }
+    }
+
+    useEffect(()=>{
+        set_pathname(pathname)
+    }, []) //only on first visit of page
 
     function redirect(pathname: string) {
         window.history.replaceState({}, "", add_base(pathname))
-        set_pathname(pathname)
     }
 
     const path_segments = pathname.split("/")
@@ -41,7 +51,7 @@ export default function Router() {
             {
                 (()=>{
                     switch (path_segments[1]) {
-                        default: redirect(localStorage.getItem("saved_pathname") ?? "/view2"); return null //redirect
+                        default: redirect(saved_pathname); return null //redirect
                         case "view1": return <View1 />
                         case "view2": return <View2 />
                         case "view3": return (
@@ -55,7 +65,7 @@ export default function Router() {
                                 {
                                     (()=>{
                                         switch (path_segments[2]) {
-                                            default: redirect(localStorage.getItem("saved_pathname_view3") ?? "/view3/subview1"); return null //redirect
+                                            default: redirect(saved_pathname_view3); return null //redirect
                                             case "subview1": return <View3SubView1 />
                                             case "subview2": return <View3SubView2 />
                                             case "subview3": return <View3SubView3 />
