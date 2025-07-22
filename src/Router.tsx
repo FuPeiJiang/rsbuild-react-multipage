@@ -18,11 +18,20 @@ export default function Router() {
     const { saved_pathname, saved_pathname_view3, set_saved_pathname } = useSavedPathnameStore()
 
     function handle_redirects(pathname: string) {
-        let redirected = true
-        switch (pathname) { // handle all redirects before render
-            case "/": pathname = saved_pathname; break;
-            case "/view3": pathname = saved_pathname_view3; break;
-            default: redirected = false
+        const path_segments = pathname.split("/")
+        // handle all redirects before render
+        let redirected = false
+        switch (path_segments[1]) {
+            default: pathname = saved_pathname; redirected = true; break;
+            case "view1": break;
+            case "view2": break;
+            case "view3":
+                switch (path_segments[2]) {
+                    default: pathname = saved_pathname_view3; redirected = true; break;
+                    case "subview1": break;
+                    case "subview2": break;
+                    case "subview3": break;
+                }; break;
         }
         if (redirected) {
             window.history.replaceState({}, "", add_base(pathname))
