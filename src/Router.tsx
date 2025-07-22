@@ -18,50 +18,56 @@ export default function Router() {
     const { saved_pathname, saved_pathname_view3, set_saved_pathname } = useSavedPathnameStore()
 
     function handle_redirects(pathname: string) {
-        const path_segments = pathname.split("/")
-        // handle all redirects before render
-        let redirected = false
-        switch (path_segments[1]) {
-            default: pathname = saved_pathname; redirected = true; break;
-            case "view1": break;
-            case "view2": break;
-            case "view3":
-                switch (path_segments[2]) {
-                    default: pathname = saved_pathname_view3; redirected = true; break;
-                    case "subview1": break;
-                    case "subview2": break;
-                    case "subview3": break;
-                }; break;
-        }
-        if (redirected) {
-            window.history.replaceState({}, "", add_base(pathname))
+        const redirected = get_redirected(pathname)
+        if (redirected !== pathname) {
+            window.history.replaceState({}, "", add_base(redirected))
+            return redirected
         }
         return pathname
     }
 
     const pathname = handle_redirects(remove_base(window.location.pathname))
 
-    function set_pathname(pathname: string) {
-        pathname = handle_redirects(pathname)
-        set_saved_pathname(pathname)
-    }
-
     // console.log("rerendered");
 
     useEffect(()=>{
-        window.addEventListener("popstate", e=>{
+        window.addEventListener("popstate", ()=>{
             const pathname = remove_base(window.location.pathname) //need to retrieve the new pathname
-            set_pathname(pathname)
+            set_saved_pathname(pathname) //if it's in the past, redirects are already handled
         })
 
-        set_pathname(pathname)
+        set_saved_pathname(handle_redirects(pathname))
     }, []) //only on first visit of page
 
 
     const path_segments = pathname.split("/")
 
+    function set_pathname_pushState(pathname: string) {
+        const redirected = get_redirected(pathname)
+        window.history.pushState({}, "", redirected)
+        set_saved_pathname(redirected)
+    }
+
+    function get_redirected(pathname: string) {
+        const path_segments = pathname.split("/")
+        // handle all redirects before render
+        switch (path_segments[1]) {
+            default: return saved_pathname;
+            case "view1": break;
+            case "view2": break;
+            case "view3":
+                switch (path_segments[2]) {
+                    default: return saved_pathname_view3;
+                    case "subview1": break;
+                    case "subview2": break;
+                    case "subview3": break;
+                }; break;
+        }
+        return pathname
+    }
+
     return (
-        <NavigationContext value={set_pathname}>
+        <NavigationContext value={set_pathname_pushState}>
             <img src={logo_rsbuild} width="40" className="inline" />
             <img src={logo_react} width="40" className="inline" />
             <br/>
