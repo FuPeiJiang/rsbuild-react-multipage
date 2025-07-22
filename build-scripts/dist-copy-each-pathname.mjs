@@ -1,5 +1,5 @@
 import { copyFileSync, existsSync, mkdirSync } from "fs";
-import { dirname, resolve } from "path";
+import { basename, dirname, resolve } from "path";
 
 const pathnames = [
     "/view1",
@@ -16,6 +16,6 @@ if (!existsSync(dist_folder)) process.exit()
 if (!existsSync(`${dist_folder}/index.html`)) process.exit()
 
 for (const pathname of pathnames) {
-    mkdirSync(`${dist_folder}/${pathname}`, {recursive: true})
-    copyFileSync(`${dist_folder}/index.html`, `${dist_folder}/${pathname}/index.html`)
+    mkdirSync(`${dist_folder}/${dirname(pathname)}`, {recursive: true})
+    copyFileSync(`${dist_folder}/index.html`, `${dist_folder}/${dirname(pathname)}/${basename(pathname)}.html`)
 }
